@@ -8,7 +8,7 @@ cattle population can be modeled by the logistic equation:
 where dP/dt is the rate of change in the number of the heard per year so the
 units for the rate constant are: /year.
 a) Graph dP/dt vs P and determine the equilibrium states of this base model
-   and label which are stable an unstable models.
+   and label which are stable and unstable models.
 b) If we choose to sell one animal per week (52/year), what is the new model?
 c) Graph P vs t for both models, statting with 2 cows
 
@@ -19,31 +19,44 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 dt = 1  # time step in years
-P0 = 2
-steps = 30
-sell = 52 # one cow per week, in one year
-r = 0.001
-K = 500
+P0 = 150
+steps = 100
+sell = 52  # one cow per week, in one year=52
+r = 0.001  # growth rate 
+K = 500  # carrying capacity
 
 t = np.array(range(0, steps+1, dt))
 P = np.zeros(len(t))
 Psell = np.zeros(len(t))
+P[0], Psell[0] = P0, P0
+
+dPselldt = np.zeros(len(t))
 dPdt = np.zeros(len(t))
-P[0], Psell[0], dPdt[0] = P0, P0, P0
+dPdt2 = np.zeros(K+1)
 
 for i in range(1, len(t)):
-    # dPdt[i] = 0.001*(500 - P[i-1])*P[i-1]
-    dPdt[i] = r*(1 - P[i-1]/K)*P[i-1]
+    # No sell
+    dPdt[i] = r*(K - P[i-1])*P[i-1]
     P[i] = P[i-1] + dPdt[i]*dt
-    Psell[i] = P[i] if P[i] < sell else P[i] - sell
+    # Selling cows
+    dPselldt[i] = r*(K - Psell[i-1])*Psell[i-1]
+    Psell[i] = Psell[i-1] + dPselldt[i]*dt - sell
+
+for i in range(1, K):
+    dPdt2[i] = r*(K-i)*i - sell
 
 plt.figure(0)
-plt.plot(t, P, 'b-')
-plt.plot(t, Psell, 'r--')
+plt.plot(t, P, 'b-', label='Cows')
+plt.plot(t, Psell, 'r--', label='Cows selling %d/yr' % sell)
+plt.legend(loc='best')
 plt.xlabel('Years')
 plt.ylabel('Cows')
+plt.grid()
+plt.savefig('q10_cows.png', dpi=300, bbox_inches='tight')
 
 plt.figure(1)
-plt.plot(P, dPdt, 'b-')
-plt.xlabel('Years')
-plt.ylabel('Change (dP/dt)')
+plt.plot(range(K+1), dPdt2, 'b-')
+plt.xlabel('K')
+plt.ylabel('dP/dt2')
+plt.grid()
+plt.savefig('q10_cows_dPdt2.png', dpi=300, bbox_inches='tight')
